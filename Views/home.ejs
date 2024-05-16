@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do List</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f3f4f6;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        .prompt-box {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            text-align: center;
+            position: fixed;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 999;
+            width: 65%;
+            margin-top: 20px;
+        }
+
+        .container {
+            width: 65%;
+            margin: 250px auto 20px auto;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+
+        .title {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #333;
+            text-align: center;
+        }
+
+        .input-field {
+            margin-bottom: 20px;
+        }
+
+        .task-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            background-color: #fff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .task-item.completed .task-text {
+            text-decoration: line-through;
+            opacity: 0.5;
+        }
+
+        .task-item .task-text {
+            flex: 1;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+
+        .delete-btn {
+            cursor: pointer;
+            color: #ff6b6b;
+        }
+
+        .delete-btn:hover {
+            color: #e53935;
+        }
+
+        .task-list-container {
+            max-height: 350px;
+            overflow-y: auto;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="prompt-box">
+        <h2 class="title">Your To-Do List</h2>
+        <div class="input-field">
+            <input id="task-input" type="text" placeholder="Enter your task">
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="task-list-container">
+            <ul class="task-list" id="task-list"></ul>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const taskInput = document.getElementById('task-input');
+            const taskList = document.getElementById('task-list');
+
+            function addTask() {
+                const taskText = taskInput.value.trim();
+                if (taskText !== '') {
+                    const li = document.createElement('li');
+                    li.className = 'task-item';
+                    li.innerHTML = `
+                        <span class="task-text">${taskText}</span>
+                        <i class="material-icons delete-btn">delete</i>
+                    `;
+                    taskList.appendChild(li);
+                    taskInput.value = '';
+                    saveTasks();
+                    checkTaskCount();
+                } else {
+                    M.toast({ html: 'Task cannot be empty', classes: 'rounded' });
+                }
+            }
+
+            function deleteTask(taskElement) {
+                taskElement.remove();
+                saveTasks();
+                checkTaskCount();
+            }
+
+            function toggleCompleted(taskElement) {
+                taskElement.classList.toggle('completed');
+                saveTasks();
+            }
+
+            function saveTasks() {
+                const tasks = [];
+                taskList.querySelectorAll('.task-item').forEach(item => {
+                    tasks.push({
+                        text: item.querySelector('.task-text').textContent.trim(),
+                        completed: item.classList.contains('completed')
+                    });
+                });
+                localStorage.setItem('tasks', JSON.stringify(tasks));
+            }
+
+            function loadTasks() {
+                const tasks = JSON.parse(localStorage.getItem('tasks'));
+                if (tasks) {
+                    tasks.forEach(task => {
+                        const li = document.createElement('li');
+                        li.className = 'task-item';
+                        if (task.completed) {
+                            li.classList.add('completed');
+                        }
+                        li.innerHTML = `
+                            <span class="task-text">${task.text}</span>
+                            <i class="material-icons delete-btn">delete</i>
+                        `;
+                        taskList.appendChild(li);
+                    });
+                    checkTaskCount();
+                }
+            }
+
+            function checkTaskCount() {
+                const taskItems = document.querySelectorAll('.task-item');
+                const taskListContainer = document.querySelector('.task-list-container');
+                if (taskItems.length > 0) {
+                    taskListContainer.style.display = 'block';
+                } else {
+                    taskListContainer.style.display = 'none';
+                }
+            }
+
+            taskInput.addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') {
+                    addTask();
+                }
+            });
+
+            taskList.addEventListener('click', function (e) {
+                if (e.target.classList.contains('delete-btn')) {
+                    deleteTask(e.target.closest('.task-item'));
+                } else if (e.target.classList.contains('task-text')) {
+                    toggleCompleted(e.target.closest('.task-item'));
+                }
+            });
+
+            loadTasks();
+        });
+    </script>
+</body>
+
+</html>
